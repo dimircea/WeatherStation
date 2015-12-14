@@ -240,6 +240,9 @@ public class MainActivity extends Activity {
     try {
       byte[] data  = new byte[1024];
       DatagramPacket packet = new DatagramPacket( data, data.length);
+      if ( socket == null) {
+        return null;
+      }
       socket.receive(packet);
       Log.i("HD:receiveUdpData", new String( packet.getData()).trim());
       return packet;
