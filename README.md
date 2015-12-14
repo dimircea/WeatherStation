@@ -5,12 +5,11 @@ This project shows how to implement a cheap (under 30 EUR) Weather Station with 
 We use the ESP8266 WiFi module, and Arduino Pro Mini, a DHT22 humidity and temperature sensor and a few other cheap components.
 
 ## Hardware Design
-The hardware design is made by using [Fritzing](fritzing.org).
-PCB Layout is currently work in progress.
+The hardware design is made by using [Fritzing](fritzing.org). The Breadboard and Schematic is ready, but the PCB Layout (for etching) is currently work in progress. All the required files are available under the `documents` folder.
 
 ## Software Design
 The user interface is implemented as an Android application, and the sensors data is obtained via WiFi. 
-In theory, any device running Android 2.3.3 (API 10) or higher can be used, but we only tested it with Android 4.3.1 (API 18), 4.4.2 (API 19) and 5.0.1 (API 21).
+We only tested it with Android 4.3.1 (API 18), 4.4.2 (API 19) and 5.0.1 (API 21), and we know that it does not work with Android 2.3.3 (API 10). You are welcome to test other Android versions and report if it works or not.
 
 The WeatherSensor node uses Arduino code.
 
