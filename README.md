@@ -4,6 +4,9 @@ Implement an Arduino based WiFi "WeatherStation" with Android user interface for
 This project shows how to implement a cheap (under 30 EUR) Weather Station with the help of an Arduino board (as example we use Arduino Pro Mini but other Arduino boards work as well).
 We use the ESP8266 WiFi module, and Arduino Pro Mini, a DHT22 humidity and temperature sensor and a few other cheap components.
 
+## Dependencies
+This project requires the [DHTLib](https://github.com/RobTillaart/Arduino/tree/master/libraries/DHTlib) and [Arduino-ESP8266](https://github.com/dimircea/Arduino-ESP8266) Arduino libraries.
+
 ## Hardware Design
 The hardware design is made by using [Fritzing](fritzing.org). The Breadboard and Schematic is ready, but the PCB Layout (for etching) is currently work in progress. All the required files are available under the `documents` folder.
 
