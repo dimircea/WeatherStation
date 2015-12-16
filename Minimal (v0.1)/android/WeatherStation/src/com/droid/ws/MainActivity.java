@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.widget.*;
+import org.json.JSONException;
 import org.json.JSONObject;
 import android.view.View;
 
@@ -75,7 +76,6 @@ public class MainActivity extends Activity {
 
     try {
       socket = new DatagramSocket(udpPort);
-      socket.setBroadcast(true);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
             continue;
           }
           try {
-            sendUdpData(udpPort, Commands.GET_ALL_SENSORS_DATA, null);
+            sendUdpData(Commands.GET_ALL_SENSORS_DATA, null);
             Thread.sleep( 10000);
           } catch (Exception e) {
             e.printStackTrace();
@@ -106,20 +106,15 @@ public class MainActivity extends Activity {
           if (appInBackground) {
             continue;
           }
+          DatagramPacket udpPacket = receiveUdpData();
+          if (udpPacket == null) {
+            continue;
+          }
+          String udpPacketData =  new String( udpPacket.getData());
           try {
-            DatagramPacket udpPacket = receiveUdpData(udpPort);
-            if (udpPacket == null) {
-              continue;
-            }
-            JSONObject jsonObj = new JSONObject((new String(udpPacket.getData())).trim());
-            double temperature = jsonObj.getDouble("temperature");
-            double avgTemperature = jsonObj.getDouble("avgTemperature");
-            double humidity = jsonObj.getDouble("humidity");
-            double avgHumidity = jsonObj.getDouble("avgHumidity");
-            double voltage = jsonObj.getDouble("voltage");
-            int freeRam = jsonObj.getInt("freeRam");
-            updateSensors(temperature, avgTemperature, humidity, avgHumidity, voltage, freeRam);
-          } catch (Exception e) {
+            JSONObject jsonObj = new JSONObject(udpPacketData);
+            updateUserInterface( jsonObj);
+          } catch ( JSONException e) {
             e.printStackTrace();
           }
         }
@@ -133,7 +128,7 @@ public class MainActivity extends Activity {
           @Override
           public void run() {
             try {
-              sendUdpData(udpPort, Commands.GET_ALL_SENSORS_DATA, null);
+              sendUdpData( Commands.GET_ALL_SENSORS_DATA, null);
             } catch (Exception e) {
               e.printStackTrace();
             }
@@ -153,43 +148,54 @@ public class MainActivity extends Activity {
     });
   }
 
-  void updateSensors( final double temperature, final double avgTemperature, final double humidity, final double avgHumidity, final double voltage, final int freeRam) {
-    sensorsDataReceivedTimeTextView.post( new Runnable() {
-      public void run() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-        sensorsDataReceivedTimeTextView.setText( dateFormat.format( new Date()));
-      }
-    });
-    temperatureValueTextView.post(new Runnable() {
-      public void run() {
-        temperatureValueTextView.setText( String.valueOf( temperature) + "°C");
-      }
-    });
-    avgTemperatureValueTextView.post(new Runnable() {
-      public void run() {
-        avgTemperatureValueTextView.setText( String.valueOf( avgTemperature) + "°C");
-      }
-    });
-    humidityValueTextView.post(new Runnable() {
-      public void run() {
-        humidityValueTextView.setText( String.valueOf( humidity) + "%");
-      }
-    });
-    avgHumidityValueTextView.post(new Runnable() {
-      public void run() {
-        avgHumidityValueTextView.setText( String.valueOf( avgHumidity) + "%");
-      }
-    });
-    voltageValueTextView.post(new Runnable() {
-      public void run() {
-        voltageValueTextView.setText( String.valueOf( voltage) + "V");
-      }
-    });
-    freeRamValueTextView.post(new Runnable() {
-      public void run() {
-        freeRamValueTextView.setText( String.valueOf( freeRam) + "Bytes");
-      }
-    });
+  void updateUserInterface( final JSONObject jsonObj) {
+    try {
+      final double temperature = jsonObj.getDouble("temperature");
+      final double avgTemperature = jsonObj.getDouble("avgTemperature");
+      final double humidity = jsonObj.getDouble("humidity");
+      final double avgHumidity = jsonObj.getDouble("avgHumidity");
+      final double voltage = jsonObj.getDouble("voltage");
+      final int freeRam = jsonObj.getInt("freeRam");
+
+      sensorsDataReceivedTimeTextView.post(new Runnable() {
+        public void run() {
+          SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+          sensorsDataReceivedTimeTextView.setText(dateFormat.format(new Date()));
+        }
+      });
+      temperatureValueTextView.post(new Runnable() {
+        public void run() {
+          temperatureValueTextView.setText(String.valueOf(temperature) + "°C");
+        }
+      });
+      avgTemperatureValueTextView.post(new Runnable() {
+        public void run() {
+          avgTemperatureValueTextView.setText(String.valueOf(avgTemperature) + "°C");
+        }
+      });
+      humidityValueTextView.post(new Runnable() {
+        public void run() {
+          humidityValueTextView.setText(String.valueOf(humidity) + "%");
+        }
+      });
+      avgHumidityValueTextView.post(new Runnable() {
+        public void run() {
+          avgHumidityValueTextView.setText(String.valueOf(avgHumidity) + "%");
+        }
+      });
+      voltageValueTextView.post(new Runnable() {
+        public void run() {
+          voltageValueTextView.setText(String.valueOf(voltage) + "V");
+        }
+      });
+      freeRamValueTextView.post(new Runnable() {
+        public void run() {
+          freeRamValueTextView.setText(String.valueOf(freeRam) + "Bytes");
+        }
+      });
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
   }
 
   InetAddress getBroadcastAddress() throws IOException {
@@ -210,7 +216,7 @@ public class MainActivity extends Activity {
     return InetAddress.getByAddress( ipQuads);
   }
 
-  void sendUdpData( int port, Commands cmd, byte[] params) {
+  void sendUdpData( Commands cmd, byte[] params) {
     try {
       final DatagramPacket packet;
       int paramsLength = ( params != null ? params.length : 0);
@@ -221,22 +227,15 @@ public class MainActivity extends Activity {
       if ( params != null) {
         System.arraycopy(params, 0, data, 1, params.length);
       }
-      // enable SO_BROADCAST broadcasting
       packet = new DatagramPacket( data, data.length,
-              getBroadcastAddress(), port);
-      try {
-        // send udp data
-        socket.send( packet);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+              getBroadcastAddress(), udpPort);
+      socket.send( packet);
     } catch( IOException e){
-      Log.e("HD:sendUdpData", "Error occurred when sending UDP data on port: " + port);
       e.printStackTrace();
     }
   }
 
-  DatagramPacket receiveUdpData( int port) {
+  DatagramPacket receiveUdpData() {
     try {
       byte[] data  = new byte[1024];
       DatagramPacket packet = new DatagramPacket( data, data.length);
