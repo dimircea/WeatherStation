@@ -74,26 +74,25 @@ public class MainActivity extends Activity {
     refreshButton = (Button) findViewById(R.id.refreshButton);
     preventScreenLockSwitch = (Switch) findViewById(R.id.preventScreenLockSwitch);
 
-    try {
-      socket = new DatagramSocket(udpPort);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
     // request sensors data from WoT sensors node
     (new Thread(new Runnable() {
       @Override
       public void run() {
-        while (true) {
-          if (appInBackground) {
-            continue;
+        try {
+          socket = new DatagramSocket(udpPort);
+          while (true) {
+            if (appInBackground) {
+              continue;
+            }
+            try {
+              sendUdpData(Commands.GET_ALL_SENSORS_DATA, null);
+              Thread.sleep(10000);
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
           }
-          try {
-            sendUdpData(Commands.GET_ALL_SENSORS_DATA, null);
-            Thread.sleep( 10000);
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
+        } catch (Exception e) {
+          e.printStackTrace();
         }
       }
     })).start();
@@ -246,7 +245,7 @@ public class MainActivity extends Activity {
       Log.i("HD:receiveUdpData", new String( packet.getData()).trim());
       return packet;
     } catch( IOException e){
-      Log.e("HD:receiveUdpData", "Error occurred when receiving UDP data on port: " + port);
+      Log.e("HD:receiveUdpData", "Error occurred when receiving UDP data on port: " + udpPort);
       e.printStackTrace();
       return null;
     }
